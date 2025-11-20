@@ -173,6 +173,7 @@ extern "C" int user_initialize() {
 	ProMenubarmenuPushbuttonAdd("ProJect", "NewProJect", "CNewProJect",
 		"New ProJect", NULL,
 		PRO_B_TRUE, PB_project, MsgFile);
+	//第三个参数跟txt文件第一行一样
 
 	//sprintf_s(Siemens_icon, Path_TK + L"text\\resource\\project_new.gif");
 	status = ProCmdIconSet(PB_project, "project_new.gif");

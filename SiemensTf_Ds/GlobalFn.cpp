@@ -162,3 +162,60 @@ void UserRecordCurrentDirectory() {
 		Setting_File.Close();
 	}
 }
+
+ProError ParameterFilterAction(ProParameter* p_object,
+	ProAppData app_data) {
+	ProError status;
+	ProParamvalue value;
+	ProUnititem units;
+
+	status = ProParameterValueWithUnitsGet(p_object, &value, &units);
+	if (status == PRO_TK_NO_ERROR) {
+		//if (value.type == PRO_PARAM_BOOLEAN)
+		//{
+			//return (PRO_TK_CONTINUE);
+		//}
+		//else {
+		return (PRO_TK_NO_ERROR);
+		//}
+	} else
+		return (PRO_TK_CONTINUE);
+}
+
+ProError ParameterVisitAction(ProParameter* p_object, ProError status,
+	ProAppData app_data) {
+	ProArray* p_array;
+	p_array = (ProArray*)((ProParameter**)app_data)[0];
+	status = ProArrayObjectAdd(p_array, PRO_VALUE_UNUSED, 1, p_object);
+	return (status);
+}
+
+ProError UserCollectParameters(
+	ProModelitem* p_modelitem,   /* In:  The model item */
+	ProParameter** p_parameters  /* Out: ProArray with collected parameters. */
+) {
+	ProError	    status;
+
+	if (p_parameters != NULL) {
+		status = ProArrayAlloc(0, sizeof(ProParameter), 1, (ProArray*)p_parameters);
+		if (status == PRO_TK_NO_ERROR) {
+			status = ProParameterVisit(p_modelitem, (ProParameterFilter)ParameterFilterAction,
+				(ProParameterAction)ParameterVisitAction, (ProAppData)&p_parameters);
+			if (status != PRO_TK_NO_ERROR) {
+				ProArrayFree((ProArray*)p_parameters);
+				*p_parameters = NULL;
+			}
+		}
+	} else
+		status = PRO_TK_BAD_INPUTS;
+
+	return (status);
+}
+
+CString UserFromProNameToCString(ProName name) {
+	CString Str;
+
+	Str.Format(L"%s", name);
+
+	return Str;
+}

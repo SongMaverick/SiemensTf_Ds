@@ -10,4 +10,9 @@
 // 添加要在此处预编译的标头
 #include "framework.h"
 
+#include <ProUtil.h>
+#include <ProUdf.h>
+#include <ProParameter.h>
+#include <ProParamval.h>
+
 #endif //PCH_H

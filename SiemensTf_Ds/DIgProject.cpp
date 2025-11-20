@@ -12,18 +12,16 @@
 IMPLEMENT_DYNAMIC(CDIgProject, CDialog)
 
 CDIgProject::CDIgProject(CWnd* pParent /*=nullptr*/)
-	: CDialog(IDD_DIgProject, pParent)
-{
+	: CDialog(IDD_DIgProject, pParent) {
 
 }
 
-CDIgProject::~CDIgProject()
-{
-}
+CDIgProject::~CDIgProject() {}
 
-void CDIgProject::DoDataExchange(CDataExchange* pDX)
-{
+void CDIgProject::DoDataExchange(CDataExchange* pDX) {
 	CDialog::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_LIST1, m_List_Para);
+	
 }
 
 
@@ -32,7 +30,10 @@ BEGIN_MESSAGE_MAP(CDIgProject, CDialog)
 	ON_BN_CLICKED(IDOK, &CDIgProject::OnBnClickedOk)
 	ON_BN_CLICKED(IDCANCEL, &CDIgProject::OnBnClickedCancel)
 	ON_WM_CLOSE()
+	
 END_MESSAGE_MAP()
+
+extern CString Path_TK;
 
 
 // CDIgProject 消息处理程序
@@ -45,7 +46,7 @@ void CDIgProject::OnMove(int x, int y) {
 
 void CDIgProject::OnBnClickedOk() {
 	// TODO: 在此添加控件通知处理程序代码
-	
+
 	DestroyWindow();  // 非模态的关闭方式
 	// CDialog::OnOK(); 模态的关闭方式
 }
@@ -64,14 +65,133 @@ void CDIgProject::OnClose() {
 	// CDialog::OnClose(); 模态的关闭方式
 }
 
-BOOL CDIgProject::OnInitDialog() 
-{
-	/*-----------------------------------------------------------------------------------------*\
-		检查程序是否执行到这里
-	\*-----------------------------------------------------------------------------------------*/
-	/*CString message;
-	message.Format(_T("DLG row = 73！"));
-	AfxMessageBox(message);*/
 
+//声明函数
+ProError UserCollectParameters(
+	ProModelitem* p_modelitem,   /* In:  The model item */
+	ProParameter** p_parameters  /* Out: ProArray with collected parameters. */
+);
+
+CString UserFromProNameToCString(ProName name);
+
+BOOL CDIgProject::OnInitDialog() {
+
+	CDialog::OnInitDialog();
+
+	ProError   status;
+	ProName    part_name;      // ProName  32字节                            
+	ProMdl     Model;
+	ProSolid  solid;
+
+	//获取模型的名称
+	status = ProMdlCurrentGet(&Model);
+	//status = ProMdlCurrentGet((ProMdl*) &solid);
+	if (status != PRO_TK_NO_ERROR) {
+		AfxMessageBox(_T("Can not find the model"));
+		EndDialog(1);
+		return false;
+	}
+
+	ProMdlType mdl_type;
+	//获得模型的类型
+	status = ProMdlTypeGet(Model, &mdl_type);
+	if (status == PRO_TK_NO_ERROR) {
+		//根据模型类型的不同执行对于的命令
+		switch (mdl_type) {
+		case PRO_MDL_ASSEMBLY:
+			AfxMessageBox(_T("the model type is: PRO_MDL_ASSEMBLY"));
+			break;
+		case PRO_MDL_PART:
+			AfxMessageBox(_T("the model type is: PRO_MDL_PART"));
+			break;
+		case PRO_MDL_DRAWING:
+			AfxMessageBox(_T("the model type is: PRO_MDL_DRAWING"));
+			break;
+		case PRO_MDL_MFG:
+			AfxMessageBox(_T("the model type is: PRO_MDL_MFG"));
+			break;
+		case PRO_MDL_LAYOUT:
+			AfxMessageBox(_T("the model type is: PRO_MDL_LAYOUT"));
+			break;
+		case PRO_MDL_DWGFORM:
+			AfxMessageBox(_T("the model type is: PRO_MDL_DWGFORM"));
+			break;
+		}
+	}
+
+	//模型用名称和类型初始化模型，获取内存中的模型
+	//ProError   status;
+	//ProName    part_name;      // ProName  32字节                            
+	ProSolid   Solid;
+	//ProMdlName    part_name;
+
+	//ProStringToWstring(part_name, "4_ES_METAL_TUB_BEND_V_CJC000000.prt");
+	//初始化模型
+	//status = ProMdlnameInit(part_name, PRO_MDLFILE_PART, (ProMdl*)&Solid);
+	//if (status == PRO_TK_NO_ERROR) {
+		//AfxMessageBox(_T("Find the part -- 4_ES_METAL_TUB_BEND_V_CJC000000.prt"));
+
+		//获取模型的名称
+		/*status = ProMdlNameGet((ProMdl)Solid, part_name);
+		if (status == PRO_TK_NO_ERROR) {
+			m_TestData = UserFromProNameToCString(part_name);
+		}*/
+
+		////在内存中删除模型,若模型在窗口中打开，则自动关闭窗口
+		//status = ProMdlErase((ProMdl)Solid);
+		//if (status == PRO_TK_NO_ERROR) {
+		//	AfxMessageBox(_T("The model has been erased in memory"));
+		//}
+
+		//在内存和硬盘中删除模型
+		//status = ProMdlDelete ( (ProMdl)Solid );
+		//ProError status;
+		//CString File_Name;
+		//ProPath Path;
+		//ProSolid Solid;
+		////模型的全路径名称
+		//File_Name = Path_TK + _T("Components\\counter.prt");
+		////UserFromCStringToProName(File_Name, Path);
+		////检索模型
+		//status = ProMdlRetrieve(Path, PRO_MDL_PART, (ProMdl*)&Solid);
+		//if (status == PRO_TK_NO_ERROR) {
+		//
+		//	//create a window
+
+		//};
+
+		//获得模型的类型
+	status = ProMdlTypeGet(Model, &mdl_type);
+	if (status == PRO_TK_NO_ERROR) {
+		if (mdl_type == PRO_MDL_ASSEMBLY || mdl_type == PRO_MDL_PART) {
+			ProModelitem  modelitem;
+			status = ProMdlToModelitem(Model, &modelitem);
+			if (status == PRO_TK_NO_ERROR) {
+				ProParameter* p_parameters;
+				int count = 0;
+				CString name_arameter;
+
+				status = UserCollectParameters(&modelitem, &p_parameters);
+				if (status == PRO_TK_NO_ERROR) {
+					status = ProArraySizeGet(p_parameters, &count);
+					if (count > 0) {
+						for (int i = 0; i < count; i++) {
+							name_arameter = UserFromProNameToCString(p_parameters[i].id);
+							//AfxMessageBox(name_arameter);
+							m_List_Para.AddString(name_arameter);
+						}
+					}
+
+					ProArrayFree((ProArray*)&p_parameters);
+					p_parameters = NULL;
+				}
+			}
+		}
+	} else {
+		AfxMessageBox(_T("Can not Find the part -- 4_ES_ADDITION_INS_P_CJC000000.prt"));
+	}
+
+	UpdateData(false);
 	return TRUE;
 }
+
