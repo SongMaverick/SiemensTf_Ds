@@ -219,3 +219,104 @@ CString UserFromProNameToCString(ProName name) {
 
 	return Str;
 }
+ProError DimensionVisitAction(ProDimension* p_object, ProError status,
+	ProAppData app_data) {
+	ProArray* p_array;
+	p_array = (ProArray*)((ProDimension**)app_data)[0];
+	status = ProArrayObjectAdd(p_array, PRO_VALUE_UNUSED, 1, p_object);
+	return (status);
+}
+
+ProError DimensionFilterAction(ProDimension* p_object,
+	ProAppData app_data) {
+	ProBoolean rel_driven;
+	ProDimensionIsReldriven(p_object, &rel_driven);
+	if (rel_driven)
+		return (PRO_TK_CONTINUE);
+	else
+		return (PRO_TK_NO_ERROR);
+}
+
+ProError  UserGetDimensionOfSolid(ProSolid solid, ProDimension** p_data) {
+	ProError status;
+	if (p_data != NULL) {
+		status = ProArrayAlloc(0, sizeof(ProDimension), 1, (ProArray*)p_data);
+		if (status == PRO_TK_NO_ERROR) {
+			status = ProSolidDimensionVisit(solid, PRO_B_FALSE,
+				(ProDimensionVisitAction)DimensionVisitAction,
+				(ProDimensionFilterAction)DimensionFilterAction, (ProAppData)&p_data);
+		} else {
+			ProArrayFree((ProArray*)p_data);
+			*p_data = NULL;
+		}
+
+	} else
+		status = PRO_TK_BAD_INPUTS;
+	return (status);
+
+}
+
+CString UserDoubleToCString(double value, int n) {
+	if (n < 0) n = 1;   
+	const bool isNegative = value < 0; 
+	double absValue = fabs(value);     
+
+	
+	const double factor = pow(10.0, n);
+	const double scaledValue = absValue * factor;
+	double integerPart = floor(scaledValue);
+	const double fractionalPart = scaledValue - integerPart;
+
+	if (fractionalPart >= 0.1) {
+		integerPart += 1;
+	}
+
+	double roundedValue = integerPart / factor;
+	if (isNegative) roundedValue = -roundedValue;
+
+	CString result;
+	result.Format(_T("%.*f"), n, roundedValue);
+
+	int dotPos = result.Find('.');
+	if (dotPos != -1) {
+		int lastNonZero = result.GetLength() - 1;
+		while (lastNonZero > dotPos && result[lastNonZero] == '0') {
+			lastNonZero--;
+		}
+		result = result.Left(lastNonZero + 1);
+
+		
+		if (result[lastNonZero] == '.') {
+			result = result.Left(dotPos);
+		}
+	}
+
+	return result;
+}
+
+ProError UserUpdateDimByName(ProDimension* dimension, CString Dim_name, double Dim_value) {
+	ProError status;
+	ProName DimName;
+	int n;
+	bool find = false;
+
+	if (Dim_name.IsEmpty()) {
+		return PRO_TK_E_NOT_FOUND;
+	}
+
+	ProArraySizeGet((ProArray)dimension, &n);
+	for (int i = 0; i < n && !find; i++) {
+		status = ProDimensionSymbolGet(dimension + i, DimName);
+		if (status == PRO_TK_NO_ERROR) {
+			if (UserFromProNameToCString(DimName) == Dim_name) {
+				find = true;
+				status = ProDimensionValueSet(dimension + i, Dim_value);
+			}
+		}
+	}
+
+	if (!find) {
+		return PRO_TK_E_NOT_FOUND;
+	}
+	return status;
+}

@@ -14,5 +14,8 @@
 #include <ProUdf.h>
 #include <ProParameter.h>
 #include <ProParamval.h>
+#include <ProDimension.h>
+#include <ProWindows.h>
+#include <ProSolid.h>
 
 #endif //PCH_H

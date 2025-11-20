@@ -29,4 +29,11 @@ public:
 	afx_msg void OnClose();
 	CListBox m_List_Para;
 
+	CListBox m_List_Dimension;
+	CListBox m_List_DimensionValue;
+	
+	CString m_Edit_Value;
+	CEdit m_Edit;
+	afx_msg void OnLbnSelchangeList3();
+	CString m_Edit_DimensionName;
 };
