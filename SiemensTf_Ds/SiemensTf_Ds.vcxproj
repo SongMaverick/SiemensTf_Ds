@@ -193,7 +193,8 @@ call protk_unlock.bat "$(TargetPath)"</Command>
     </ResourceCompile>
     <PostBuildEvent>
       <Command>cd /d "C:\PTC\Creo 8.0.10.0\Parametric\bin"
-call protk_unlock.bat "$(TargetPath)"</Command>
+call protk_unlock.bat "$(TargetPath)"
+xcopy "$(TargetDir)$(TargetName).*" "D:\D7_codeBase\Creo8_Train\SiemensTf\text\Creo8.0" /Y /F /S</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

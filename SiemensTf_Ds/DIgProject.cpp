@@ -28,6 +28,7 @@ void CDIgProject::DoDataExchange(CDataExchange* pDX) {
 	DDX_Text(pDX, IDC_EDIT2, m_Edit_Value);
 	DDX_Control(pDX, IDC_EDIT2, m_Edit);
 	DDX_Text(pDX, IDC_EDIT1, m_Edit_DimensionName);
+	DDX_Control(pDX, IDC_LIST2, m_List_name);
 }
 
 
@@ -53,6 +54,8 @@ ProError UserGetDimensionOfSolid(ProSolid solid, ProDimension** p_data);
 ProError UserCollectSolidAxis(ProSolid p_solid, ProAxis** p_axis);
 ProError UserCollectSolidFeature(ProSolid p_solid, ProFeature** feature);
 ProError UserFeatureDelete(ProSolid model, int id_feature);
+ProError UserCollectSolidInAssembly(ProSolid p_solid, ProSolid** Comp_Solid);
+
 
 // CDIgProject 消息处理程序
 void CDIgProject::OnMove(int x, int y) {
@@ -244,7 +247,7 @@ BOOL CDIgProject::OnInitDialog() {
 		}
 	}
 
-	//获得模型的类型
+	//删除特征代码测试
 	status = ProMdlTypeGet(Model, &mdl_type);
 	if (status == PRO_TK_NO_ERROR) {
 		if (mdl_type == PRO_MDL_ASSEMBLY || mdl_type == PRO_MDL_PART) {
@@ -270,6 +273,48 @@ BOOL CDIgProject::OnInitDialog() {
 			}
 		}
 	}
+
+	//读取装配体中的装配体和零件到列表框中
+	status = ProMdlTypeGet(Model, &mdl_type);
+	if (status == PRO_TK_NO_ERROR) {
+		if (mdl_type == PRO_MDL_ASSEMBLY /*|| mdl_type == PRO_MDL_PART*/) {
+			ProSolid* comp_Solid;
+			int count = 0;
+			ProName name;
+			ProMdlType comp_Solid_type;
+			status = UserCollectSolidInAssembly((ProSolid)Model, &comp_Solid);
+			//status = UserCollectSolidFeature((ProSolid)Model, &feature);
+			CString name_asm_prt;
+			if (status == PRO_TK_NO_ERROR) {
+				status = ProArraySizeGet(comp_Solid, &count);
+				if (count > 0) {
+					for (int i = 0; i < count; i++) {
+
+						status = ProMdlNameGet((ProMdl)comp_Solid[i], name);
+						status = ProMdlTypeGet(comp_Solid[i], &comp_Solid_type);
+						if (status == PRO_TK_NO_ERROR) {
+
+							if (comp_Solid_type == PRO_MDL_ASSEMBLY) {
+							
+								name_asm_prt = UserFromProNameToCString(name) += _T(".asm");
+							} else if (PRO_MDL_PART) {
+								name_asm_prt = UserFromProNameToCString(name) += _T(".prt");
+							}
+							//AfxMessageBox(name_asm_prt);
+							m_List_name.AddString(name_asm_prt);
+							//name_asm_prt = UserFromProNameToCString(p_parameters[i].id);
+							//AfxMessageBox(name_arameter);
+							//m_List_Para.AddString(name_arameter);
+						}
+					}
+					ProArrayFree((ProArray*)&comp_Solid);
+					comp_Solid = NULL;
+				}
+			}
+		}
+	}
+
+
 
 	UpdateData(false);
 	return TRUE;

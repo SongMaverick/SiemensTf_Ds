@@ -36,4 +36,5 @@ public:
 	CEdit m_Edit;
 	afx_msg void OnLbnSelchangeList3();
 	CString m_Edit_DimensionName;
+	CListBox m_List_name;
 };
