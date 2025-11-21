@@ -2,7 +2,6 @@
 #include "SiemensTf_Ds.h"
 #include <ProWindows.h>
 #include "DIgProject.h"
-#include "Dialog1.h"
 
 /*--------------------------------------------------------------------*\
 Functions declaration

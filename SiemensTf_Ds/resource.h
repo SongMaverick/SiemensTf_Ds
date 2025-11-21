@@ -7,7 +7,6 @@
 #define IDC_LIST3                       1002
 #define IDC_LIST_DimensionValue         1003
 #define IDC_EDIT2                       1005
-#define IDD_DIALOG1                     1006
 #define IDC_COMBO1                      1006
 #define IDC_EDIT1                       1007
 #define IDC_LIST2                       1008

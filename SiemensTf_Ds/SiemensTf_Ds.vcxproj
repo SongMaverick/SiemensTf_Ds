@@ -198,7 +198,6 @@ xcopy "$(TargetDir)$(TargetName).*" "D:\D7_codeBase\Creo8_Train\SiemensTf\text\C
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Dialog1.cpp" />
     <ClCompile Include="DIgProject.cpp" />
     <ClCompile Include="DlgStart.cpp" />
     <ClCompile Include="GlobalFn.cpp" />
@@ -215,7 +214,6 @@ xcopy "$(TargetDir)$(TargetName).*" "D:\D7_codeBase\Creo8_Train\SiemensTf\text\C
     <None Include="SiemensTf_Ds.def" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Dialog1.h" />
     <ClInclude Include="DIgProject.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
