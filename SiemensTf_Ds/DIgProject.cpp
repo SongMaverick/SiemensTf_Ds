@@ -50,10 +50,11 @@ CString UserDoubleToCString(double value, int n);
 ProError UserUpdateDimByName(ProDimension* dimension, CString Dim_name, double Dim_value);
 CString UserFromProNameToCString(ProName name);
 ProError UserGetDimensionOfSolid(ProSolid solid, ProDimension** p_data);
-
+ProError UserCollectSolidAxis(ProSolid p_solid, ProAxis** p_axis);
+ProError UserCollectSolidFeature(ProSolid p_solid, ProFeature** feature);
+ProError UserFeatureDelete(ProSolid model, int id_feature);
 
 // CDIgProject 消息处理程序
-
 void CDIgProject::OnMove(int x, int y) {
 	CDialog::OnMove(x, y);
 
@@ -174,41 +175,6 @@ BOOL CDIgProject::OnInitDialog() {
 	ProSolid   Solid;
 	//ProMdlName    part_name;
 
-	//ProStringToWstring(part_name, "4_ES_METAL_TUB_BEND_V_CJC000000.prt");
-	//初始化模型
-	//status = ProMdlnameInit(part_name, PRO_MDLFILE_PART, (ProMdl*)&Solid);
-	//if (status == PRO_TK_NO_ERROR) {
-		//AfxMessageBox(_T("Find the part -- 4_ES_METAL_TUB_BEND_V_CJC000000.prt"));
-
-		//获取模型的名称
-		/*status = ProMdlNameGet((ProMdl)Solid, part_name);
-		if (status == PRO_TK_NO_ERROR) {
-			m_TestData = UserFromProNameToCString(part_name);
-		}*/
-
-		////在内存中删除模型,若模型在窗口中打开，则自动关闭窗口
-		//status = ProMdlErase((ProMdl)Solid);
-		//if (status == PRO_TK_NO_ERROR) {
-		//	AfxMessageBox(_T("The model has been erased in memory"));
-		//}
-
-		//在内存和硬盘中删除模型
-		//status = ProMdlDelete ( (ProMdl)Solid );
-		//ProError status;
-		//CString File_Name;
-		//ProPath Path;
-		//ProSolid Solid;
-		////模型的全路径名称
-		//File_Name = Path_TK + _T("Components\\counter.prt");
-		////UserFromCStringToProName(File_Name, Path);
-		////检索模型
-		//status = ProMdlRetrieve(Path, PRO_MDL_PART, (ProMdl*)&Solid);
-		//if (status == PRO_TK_NO_ERROR) {
-		//
-		//	//create a window
-
-		//};
-
 	//获得模型的类型
 	status = ProMdlTypeGet(Model, &mdl_type);
 	if (status == PRO_TK_NO_ERROR) {
@@ -276,10 +242,37 @@ BOOL CDIgProject::OnInitDialog() {
 
 			AfxMessageBox(_T("Can not Find the part -- 4_ES_ADDITION_INS_P_CJC000000.prt"));
 		}
-
-		UpdateData(false);
-		return TRUE;
 	}
+
+	//获得模型的类型
+	status = ProMdlTypeGet(Model, &mdl_type);
+	if (status == PRO_TK_NO_ERROR) {
+		if (mdl_type == PRO_MDL_ASSEMBLY || mdl_type == PRO_MDL_PART) {
+			ProFeature* feature;
+			int count = 0;
+			ProName name;
+
+			status = UserCollectSolidFeature((ProSolid)Model, &feature);
+			if (status == PRO_TK_NO_ERROR) {
+				status = ProArraySizeGet(feature, &count);
+				if (count > 0) {
+					for (int i = 0; i < count; i++) {
+						status = ProModelitemNameGet(&feature[i], name);
+						if (status == PRO_TK_NO_ERROR) {
+							if (UserFromProNameToCString(name) == "FEATURE_TEST") {
+								status = UserFeatureDelete((ProSolid)Model, feature[i].id);
+							}
+						}
+					}
+					ProArrayFree((ProArray*)&feature);
+					feature = NULL;
+				}
+			}
+		}
+	}
+
+	UpdateData(false);
+	return TRUE;
 }
 
 

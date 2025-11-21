@@ -15,17 +15,6 @@
 #include <Nb30.h>
 #pragma comment(lib,"netapi32.lib") 
 
-/*--------------------------------------------------------------------*\
-Pro/TOOLKIT includes
-\*--------------------------------------------------------------------*/
-#include "ProMenu.h"
-#include "ProUtil.h"
-#include "ProMenubar.h"
-#include <ProWindows.h>
-#include <ProSolid.h>
-#include <comdef.h>
-#include <ProMessage.h>
-
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -440,9 +429,6 @@ int ProTestCheckButtonValue(
 			break;
 		}
 	}
-
-
-
 
 	return(0);
 }

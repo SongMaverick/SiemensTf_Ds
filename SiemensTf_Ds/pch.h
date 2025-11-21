@@ -17,5 +17,13 @@
 #include <ProDimension.h>
 #include <ProWindows.h>
 #include <ProSolid.h>
+#include <ProFeature.h>
+#include <ProModelitem.h>
+#include "ProMenu.h"
+#include "ProMenubar.h"
+#include <comdef.h>
+#include <ProMessage.h>
+#include <ProQuilt.h>
+#include <ProFeatType.h>
 
 #endif //PCH_H
