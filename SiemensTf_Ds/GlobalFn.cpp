@@ -58,6 +58,14 @@ bool ConvertCStringToProPath(const CString& src, ProPath dest) {
 	return true;
 }
 
+CString UserFromProLineToCString(ProLine name) {
+	CString Str;
+
+	Str.Format(L"%s", name);
+
+	return Str;
+}
+
 // CStringתProName (PRO_NAME_SIZE = 32)
 bool ConvertCStringToProName(const CString& src, ProName dest) {
 	if (src.IsEmpty()) {
@@ -160,6 +168,140 @@ void UserRecordCurrentDirectory() {
 		Setting_File.Close();
 	}
 }
+
+
+bool UserCreaseParamByName(CString param_name, ProModelitem* modelitem, int Type_Param) {
+	ProParamvalue proval;
+	ProName ParamName;
+	ProParameter param, new_param;
+	ProError status;
+	bool Is_Succeed = false;
+
+	param_name.MakeUpper();
+
+	ConvertCStringToProName(param_name, ParamName);
+
+	status = ProParameterInit(modelitem, ParamName, &param);
+	if (status == PRO_TK_E_NOT_FOUND) {
+		switch (Type_Param) {
+		case 1:  //整形
+			proval.type = PRO_PARAM_INTEGER;
+			proval.value.i_val = 0;
+			break;
+		case 2:
+			proval.type = PRO_PARAM_DOUBLE;
+			proval.value.d_val = 0.0;
+			break;
+		case 3:
+			proval.type = PRO_PARAM_STRING;
+			ProStringToWstring(proval.value.s_val, "");
+			break;
+		case 4:
+			proval.type = PRO_PARAM_BOOLEAN;
+			proval.value.l_val = 0;
+			break;
+		}
+
+		status = ProParameterWithUnitsCreate(modelitem, ParamName, &proval, NULL, &new_param);
+		if (status == PRO_TK_NO_ERROR)
+			Is_Succeed = true;
+	}
+
+	return Is_Succeed;
+}
+
+bool UpdateParamByName(CString param_name, CString newParValue, ProModelitem* modelitem) {
+	ProError status;
+	ProName ParamName;
+	ProParameter param;
+	ProParamvalue value;
+	ProUnititem units;
+	bool Is_Succeed = false;
+	param_name.MakeUpper();
+
+	ConvertCStringToProName(param_name, ParamName);
+
+	status = ProParameterInit(modelitem, ParamName, &param);
+	if (status != PRO_TK_NO_ERROR) return false;
+
+	status = ProParameterValueWithUnitsGet(&param, &value, &units);
+	if (status == PRO_TK_NO_ERROR) {
+		switch (value.type) {
+		case PRO_PARAM_DOUBLE:
+			value.value.d_val = _ttof(newParValue);
+			break;
+		case PRO_PARAM_INTEGER:
+			value.value.i_val = _ttoi(newParValue);
+			break;
+		case PRO_PARAM_STRING:
+			ConvertCStringToProLine(newParValue, value.value.s_val);
+			break;
+		case PRO_PARAM_BOOLEAN:
+			newParValue.MakeUpper();
+			if (newParValue == "YES") {
+				value.value.l_val = 1;
+			} else {
+				value.value.l_val = 0;
+			}
+			break;
+
+		}
+		status = ProParameterValueWithUnitsSet(&param, &value, &units);
+		if (status == PRO_TK_NO_ERROR) {
+			Is_Succeed = true;
+		}
+	}
+
+	return Is_Succeed;
+}
+
+CString GetParamValueByName(CString param_name, ProModelitem* modelitem) {
+	ProError status;
+	CString ParamValue;
+	ProName ParamName;
+	ProParameter param;
+	ProParamvalue value;
+	ProUnititem units;
+
+	param_name.MakeUpper();
+	ParamValue.Empty();
+
+	ConvertCStringToProName(param_name, ParamName);
+
+	status = ProParameterInit(modelitem, ParamName, &param);
+	if (status == PRO_TK_NO_ERROR) {
+		status = ProParameterValueWithUnitsGet(&param, &value, &units);
+		if (status == PRO_TK_NO_ERROR) {
+			switch (value.type) {
+			case PRO_PARAM_DOUBLE:
+				ParamValue.Format(_T("%0.5f"), value.value.d_val);
+				break;
+			case PRO_PARAM_INTEGER:
+				ParamValue.Format(_T("%d"), value.value.i_val);
+				break;
+			case PRO_PARAM_STRING:
+				ParamValue = UserFromProLineToCString(value.value.s_val);
+				break;
+			case PRO_PARAM_BOOLEAN:
+				if (value.value.l_val > 0) {
+					ParamValue = "YES";
+				} else {
+					ParamValue = "NO";
+				}
+				break;
+			}
+		}
+
+		if (ParamValue == " ") {
+			ParamValue.Empty();
+		}
+	} else {
+		ParamValue.Empty();
+	}
+
+	return (ParamValue);
+}
+
 
 ProError ParameterFilterAction(ProParameter* p_object,
 	ProAppData app_data) {

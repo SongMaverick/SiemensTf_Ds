@@ -12,7 +12,7 @@
 IMPLEMENT_DYNAMIC(CDIgProject, CDialog)
 
 CDIgProject::CDIgProject(CWnd* pParent /*=nullptr*/)
-	: CDialog(IDD_DIgProject, pParent), m_Edit_Value(_T("")), m_Edit_DimensionName(_T("")) {
+	: CDialog(IDD_DIgProject, pParent), m_Edit_Value(_T("")), m_Edit_DimensionName(_T("")), m_Edit_Para_Value(_T("")), m_Edit_Para_name(_T("")) {
 
 }
 
@@ -29,6 +29,9 @@ void CDIgProject::DoDataExchange(CDataExchange* pDX) {
 	DDX_Control(pDX, IDC_EDIT2, m_Edit);
 	DDX_Text(pDX, IDC_EDIT1, m_Edit_DimensionName);
 	DDX_Control(pDX, IDC_LIST2, m_List_name);
+	DDX_Text(pDX, IDC_EDIT3, m_Edit_Para_Value);
+	DDX_Control(pDX, IDC_EDIT3, m_Edit_Para);
+	DDX_Text(pDX, IDC_EDIT4, m_Edit_Para_name);
 }
 
 
@@ -39,6 +42,7 @@ BEGIN_MESSAGE_MAP(CDIgProject, CDialog)
 	ON_WM_CLOSE()
 
 	ON_LBN_SELCHANGE(IDC_LIST3, &CDIgProject::OnLbnSelchangeList3)
+	ON_LBN_SELCHANGE(IDC_LIST1, &CDIgProject::OnLbnSelchangeList1)
 END_MESSAGE_MAP()
 
 //声明函数
@@ -55,6 +59,8 @@ ProError UserCollectSolidAxis(ProSolid p_solid, ProAxis** p_axis);
 ProError UserCollectSolidFeature(ProSolid p_solid, ProFeature** feature);
 ProError UserFeatureDelete(ProSolid model, int id_feature);
 ProError UserCollectSolidInAssembly(ProSolid p_solid, ProSolid** Comp_Solid);
+CString GetParamValueByName(CString param_name, ProModelitem* modelitem);
+bool UpdateParamByName(CString param_name, CString newParValue, ProModelitem* modelitem);
 
 
 // CDIgProject 消息处理程序
@@ -82,7 +88,7 @@ void CDIgProject::OnBnClickedOk() {
 		return;
 	}
 
-	//获得模型的类型
+	//修改尺寸
 	status = ProMdlTypeGet(solid, &mdl_type);
 	if (status == PRO_TK_NO_ERROR) {
 		if (mdl_type == PRO_MDL_ASSEMBLY || mdl_type == PRO_MDL_PART) {
@@ -90,6 +96,7 @@ void CDIgProject::OnBnClickedOk() {
 
 			status = UserGetDimensionOfSolid(solid, &dim);
 			if (status == PRO_TK_NO_ERROR) {
+
 				UserUpdateDimByName(dim, m_Edit_DimensionName, _ttof(m_Edit_Value));
 
 				ProArrayFree((ProArray*)&dim);
@@ -102,6 +109,21 @@ void CDIgProject::OnBnClickedOk() {
 			status = ProWindowRepaint(PRO_VALUE_UNUSED);
 
 		}
+	}
+
+	//修改参数
+	ProMdl Model;
+	status = ProMdlCurrentGet(&Model);
+	if (status == PRO_TK_NO_ERROR) {
+
+		ProModelitem  modelitem;
+		status = ProMdlToModelitem(Model, &modelitem);
+
+		bool result = UpdateParamByName(m_Edit_Para_name, m_Edit_Para_Value, &modelitem);
+		
+		status = ProSolidRegenerate(solid, PRO_REGEN_NO_FLAGS);
+
+		status = ProWindowRepaint(PRO_VALUE_UNUSED);
 	}
 	//m_List_Mat.GetText(m_List_Mat.GetCurSel(), m_Mat);
 	//m_List_DimValue.GetText(m_List_Mat.GetCurSel(), m_Width);
@@ -190,6 +212,7 @@ BOOL CDIgProject::OnInitDialog() {
 			ProName dimName;
 			double Dim_value = 0.0;
 
+			//拿到尺寸
 			status = UserGetDimensionOfSolid((ProSolid)Model, &dim);
 			if (status == PRO_TK_NO_ERROR) {
 
@@ -218,6 +241,8 @@ BOOL CDIgProject::OnInitDialog() {
 				ProArrayFree((ProArray*)&dim);
 				dim = NULL;
 
+
+				//拿到参数
 				ProModelitem  modelitem;
 				status = ProMdlToModelitem(Model, &modelitem);
 				if (status == PRO_TK_NO_ERROR) {
@@ -295,7 +320,7 @@ BOOL CDIgProject::OnInitDialog() {
 						if (status == PRO_TK_NO_ERROR) {
 
 							if (comp_Solid_type == PRO_MDL_ASSEMBLY) {
-							
+
 								name_asm_prt = UserFromProNameToCString(name) += _T(".asm");
 							} else if (PRO_MDL_PART) {
 								name_asm_prt = UserFromProNameToCString(name) += _T(".prt");
@@ -326,5 +351,23 @@ void CDIgProject::OnLbnSelchangeList3() {
 	m_List_Dimension.GetText(m_List_Dimension.GetCurSel(), m_Edit_DimensionName);
 	m_List_DimensionValue.GetText(m_List_Dimension.GetCurSel(), m_Edit_Value);
 
+	UpdateData(false);
+}
+
+void CDIgProject::OnLbnSelchangeList1() {
+	// TODO: 在此添加控件通知处理程序代码
+
+	m_List_Para.GetText(m_List_Para.GetCurSel(), m_Edit_Para_name);
+
+	ProMdl Model;
+	ProModelitem  modelitem;
+	ProError  status;
+	status = ProMdlCurrentGet(&Model);
+	status = ProMdlToModelitem(Model, &modelitem);
+	if (status == PRO_TK_NO_ERROR) {
+		CString paraName = GetParamValueByName(m_Edit_Para_name, &modelitem);
+		m_Edit_Para_Value = paraName;
+	}
+	//m_List_DimensionValue.GetText(m_List_Dimension.GetCurSel(), m_Edit_Value);
 	UpdateData(false);
 }
