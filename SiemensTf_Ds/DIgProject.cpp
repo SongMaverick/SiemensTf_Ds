@@ -340,6 +340,22 @@ BOOL CDIgProject::OnInitDialog() {
 	}
 
 
+	//尝试拿到骨架模型
+	ProMdlName name;
+	ProMdl skeleton;
+	//ProMdl Model;
+	//ProError err;
+	status = ProMdlCurrentGet(&Model);
+	status = ProMdlTypeGet(Model, &mdl_type);
+	if (status == PRO_TK_NO_ERROR) {
+		if (mdl_type == PRO_MDL_ASSEMBLY) {
+
+			status = ProAsmSkeletonGet((ProAssembly)Model, &skeleton);
+			status = ProMdlNameGet(skeleton, name);
+			AfxMessageBox(UserFromProNameToCString(name));
+			//status = ProSolidMdlnameInit(name, (ProMdlfileType)model_type, &solid);
+		}
+	}
 
 	UpdateData(false);
 	return TRUE;

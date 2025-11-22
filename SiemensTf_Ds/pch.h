@@ -25,5 +25,6 @@
 #include <ProMessage.h>
 #include <ProQuilt.h>
 #include <ProFeatType.h>
+#include <ProSkeleton.h>
 
 #endif //PCH_H
